@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sam3</title>
+  <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f; --surface: #12121a; --surface2: #1a1a26;
+      --border: #2a2a3e; --border2: #3a3a5e;
+      --accent: #4a9eff; --text: #e8e8f0; --muted: #6b6b8a;
+      --green: #4aff8a; --blue: #4a9eff; --red: #ff4a6a;
+      --yellow: #ffd84a; --purple: #c44aff;
+      --font-pixel: 'Press Start 2P', monospace;
+      --font-body: 'Noto Sans KR', sans-serif;
+    }
+    html, body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; }
+    header { padding: 10px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 100; }
+    .logo { font-family: var(--font-pixel); font-size: 10px; color: var(--accent); }
+    .game-status { font-family: var(--font-pixel); font-size: 7px; padding: 4px 8px; border-radius: 2px; }
+    .status-off  { background: var(--red);   color: #fff; }
+    .status-load { background: var(--blue);  color: #000; }
+    .status-on   { background: var(--green); color: #000; }
+    main { max-width: 1300px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: 1fr 380px; gap: 16px; }
+    @media (max-width: 960px) { main { grid-template-columns: 1fr; } }
+    .player-wrapper { position: relative; background: #000; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .player-wrapper:fullscreen,
+    .player-wrapper:-webkit-full-screen,
+    .player-wrapper:-moz-full-screen { overflow: visible; border-radius: 0; border: none; }
+    #canvas { width: 100%; aspect-ratio: 4/3; max-height: 52vh; display: block; }
+    #splash { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; z-index: 10; transition: opacity .4s; }
+    #splash.hidden { opacity: 0; pointer-events: none; }
+    .splash-icon { font-size: 64px; margin-bottom: 12px; }
+    .splash-ttl { font-family: var(--font-pixel); font-size: 11px; color: var(--accent); margin-bottom: 6px; line-height: 2; }
+    .splash-sub { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+    .save-notice { font-size: 11px; color: var(--blue); min-height: 16px; margin-bottom: 18px; }
+    .play-btn { font-family: var(--font-pixel); font-size: 9px; padding: 10px 28px; background: transparent; border: 2px solid var(--accent); color: var(--accent); cursor: pointer; animation: blink 1.8s infinite; }
+    .play-btn:hover { background: var(--accent); color: #000; animation: none; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+    #loading { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: #000; z-index: 11; }
+    #loading.show { display: flex; }
+    .loading-txt { font-family: var(--font-pixel); font-size: 9px; color: var(--accent); margin-bottom: 14px; animation: blink 1s infinite; }
+    .prog-outer { width: 260px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .prog-inner { height: 100%; background: var(--accent); width: 0%; transition: width .3s; }
+    .prog-label { font-size: 10px; color: var(--muted); margin-top: 8px; }
+    .game-toolbar { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 0; align-items: center; }
+    .btn { font-family: var(--font-pixel); font-size: 7px; padding: 7px 10px; border: 1px solid; border-radius: 3px; cursor: pointer; transition: all .15s; white-space: nowrap; }
+    .btn-start { background: var(--accent); border-color: var(--accent); color: #000; }
+    .btn-start:hover { background: transparent; color: var(--accent); }
+    .btn-save  { background: transparent; border-color: var(--blue);  color: var(--blue); }
+    .btn-save:hover  { background: var(--blue);  color: #000; }
+    .btn-dl    { background: transparent; border-color: var(--blue);  color: var(--blue); }
+    .btn-dl:hover    { background: var(--blue);  color: #000; }
+    .btn-ul    { background: transparent; border-color: var(--green); color: var(--green); }
+    .btn-ul:hover    { background: var(--green); color: #000; }
+    .btn-del   { background: transparent; border-color: var(--red);   color: var(--red); }
+    .btn-del:hover   { background: var(--red);   color: #fff; }
+    .btn-ghost { background: transparent; border-color: var(--border); color: var(--muted); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+    .touch-controls { display: none; padding: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; margin-top: 8px; }
+    @media (pointer: coarse) {
+      .touch-controls { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+      .pc-ctrl { display: none !important; }
+    }
+    .player-wrapper:fullscreen .touch-controls,
+    .player-wrapper:-webkit-full-screen .touch-controls,
+    .player-wrapper:-moz-full-screen .touch-controls {
+      display: flex !important; position: absolute; bottom: 0; left: 0; right: 0;
+      justify-content: space-between; align-items: center;
+      padding: 12px 20px; background: rgba(0,0,0,0.55);
+      border: none; border-radius: 0; margin: 0; z-index: 9999;
+    }
+    /* 숫자 패드 */
+    .numpad { display: grid; grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(4, 56px); gap: 3px; }
+    .act-btns { display: flex; flex-direction: column; gap: 8px; }
+    .touch-btn { width: 56px; height: 56px; background: #1e1e2e; border: 2px solid var(--border2); border-radius: 8px; color: var(--text); font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; -webkit-user-select: none; transition: all .1s; touch-action: manipulation; }
+    .touch-btn:active, .touch-btn.pressed { background: var(--accent); border-color: var(--accent); color: #000; transform: scale(0.9); }
+    .touch-btn.act { width: 72px; height: 56px; font-family: var(--font-pixel); font-size: 7px; background: #1a1a2e; border-color: var(--accent); color: var(--accent); }
+    .pc-ctrl { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .ctrl-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 12px; }
+    .ctrl-card h3 { font-family: var(--font-pixel); font-size: 7px; color: var(--accent); margin-bottom: 10px; }
+    .k-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .key { font-family: var(--font-pixel); font-size: 7px; padding: 3px 6px; background: var(--bg); border: 1px solid var(--border2); border-radius: 2px; min-width: 32px; text-align: center; }
+    .k-desc { color: var(--muted); font-size: 11px; }
+    .editor-col { display: flex; flex-direction: column; gap: 12px; }
+    .tabs { display: flex; gap: 3px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 4px; }
+    .tab { flex: 1; font-family: var(--font-pixel); font-size: 7px; padding: 7px 4px; text-align: center; border: 1px solid transparent; border-radius: 2px; cursor: pointer; color: var(--muted); transition: all .2s; }
+    .tab:hover { color: var(--text); border-color: var(--border2); }
+    .tab.active { background: var(--accent); color: #000; border-color: var(--accent); }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .card-hd { padding: 9px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .card-ttl { font-family: var(--font-pixel); font-size: 8px; color: var(--accent); }
+    .badge { font-family: var(--font-pixel); font-size: 6px; padding: 3px 6px; border-radius: 2px; }
+    .b-green  { background: var(--green);  color: #000; }
+    .b-red    { background: var(--red);    color: #fff; }
+    .b-blue   { background: var(--blue);   color: #000; }
+    .b-yellow { background: var(--yellow); color: #000; }
+    .b-purple { background: var(--purple); color: #fff; }
+    .card-body { padding: 12px; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .lbl { font-size: 9px; color: var(--muted); }
+    .scan-row { display: flex; gap: 6px; margin-bottom: 8px; }
+    .scan-in { flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 7px 10px; font-family: var(--font-pixel); font-size: 8px; border-radius: 3px; outline: none; }
+    .scan-in:focus { border-color: var(--accent); }
+    .scan-in::placeholder { color: var(--muted); }
+    .scan-sel { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 7px 6px; font-size: 11px; border-radius: 3px; outline: none; }
+    .scan-results { max-height: 160px; overflow-y: auto; }
+    .scan-item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; margin-bottom: 3px; background: var(--bg); border: 1px solid var(--border); border-radius: 2px; cursor: pointer; transition: border-color .15s; }
+    .scan-item:hover { border-color: var(--accent); }
+    .scan-item.sel { border-color: var(--yellow); background: rgba(255,216,74,.05); }
+    .scan-addr { font-family: monospace; font-size: 10px; color: var(--blue); min-width: 80px; }
+    .scan-v { font-family: var(--font-pixel); font-size: 8px; color: var(--yellow); }
+    .scan-empty { font-size: 11px; color: var(--muted); text-align: center; padding: 14px; }
+    .log-area { background: var(--bg); border: 1px solid var(--border); border-radius: 3px; padding: 8px 10px; max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 10px; }
+    .ll { padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,.03); }
+    .ll.ok   { color: var(--green); }
+    .ll.err  { color: var(--red); }
+    .ll.info { color: var(--blue); }
+    .ll.warn { color: var(--yellow); }
+    #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); font-family: var(--font-pixel); font-size: 8px; padding: 9px 18px; border-radius: 4px; z-index: 9999; opacity: 0; transition: opacity .3s; pointer-events: none; white-space: nowrap; }
+    #toast.show { opacity: 1; }
+    #toast.ok  { background: var(--green);  color: #000; }
+    #toast.err { background: var(--red);    color: #fff; }
+    #toast.nfo { background: var(--blue);   color: #000; }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
+    .stat-disp { background:var(--bg); color:var(--yellow); border:1px solid var(--border2); border-radius:3px; padding:4px 6px; font-size:13px; font-weight:bold; font-family:monospace; text-align:center; cursor:pointer; min-height:28px; }
+    .stat-disp:hover { border-color:var(--accent); }
+    .gold-big { text-align:center; margin-bottom:14px; }
+    .gold-big .lbl { font-size:10px; color:var(--muted); margin-bottom:4px; }
+    .gold-big .val { font-family:var(--font-pixel); font-size:18px; color:var(--yellow); }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo">🗡 Sam3 <span style="font-size:10px;color:var(--yellow);font-weight:bold;vertical-align:middle;">v1</span></div>
+  <span class="game-status status-off" id="gs">게임 꺼짐</span>
+</header>
+
+<main>
+  <!-- 게임 화면 -->
+  <div>
+    <div class="player-wrapper">
+      <div id="splash">
+        <div class="splash-icon">🗡</div>
+        <div class="splash-ttl">Sam3</div>
+        <div class="splash-sub">DOS Game</div>
+        <div class="save-notice" id="save-notice"></div>
+        <button class="play-btn" id="btn-play">▶ PLAY</button>
+      </div>
+      <div id="loading">
+        <div class="loading-txt">LOADING...</div>
+        <div class="prog-outer"><div class="prog-inner" id="prog"></div></div>
+        <div class="prog-label" id="prog-label">0 / 0</div>
+      </div>
+      <canvas id="canvas"></canvas>
+
+      <!-- 모바일 터치 컨트롤 (숫자패드 + Enter/ESC) -->
+      <div class="touch-controls">
+        <div class="numpad">
+          <button class="touch-btn" data-key="7">7</button>
+          <button class="touch-btn" data-key="8">8</button>
+          <button class="touch-btn" data-key="9">9</button>
+          <button class="touch-btn" data-key="4">4</button>
+          <button class="touch-btn" data-key="5">5</button>
+          <button class="touch-btn" data-key="6">6</button>
+          <button class="touch-btn" data-key="1">1</button>
+          <button class="touch-btn" data-key="2">2</button>
+          <button class="touch-btn" data-key="3">3</button>
+          <button class="touch-btn" style="grid-column:span 2;" data-key="0">0</button>
+          <button class="touch-btn" data-key="Backspace">⌫</button>
+        </div>
+        <div class="act-btns">
+          <button class="touch-btn act" data-key="Enter">ENTER</button>
+          <button class="touch-btn act" data-key="Escape">ESC</button>
+          <button class="touch-btn act" data-key="ArrowUp">▲</button>
+          <button class="touch-btn act" data-key="ArrowDown">▼</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 툴바 -->
+    <div class="game-toolbar">
+      <button class="btn btn-start" id="btn-start">▶ 시작</button>
+      <button class="btn btn-save"  id="btn-save">💾 저장</button>
+      <button class="btn btn-del"   id="btn-del">🗑 삭제</button>
+      <button class="btn btn-dl"    id="btn-dl">⬇ 다운로드</button>
+      <button class="btn btn-ul"    id="btn-ul-t">⬆ 불러오기</button>
+      <button class="btn btn-ghost" id="btn-full">⛶ 전체화면</button>
+      <input type="file" id="btn-ul" accept=".SAV,.sav,.dat,.DAT" style="display:none" />
+    </div>
+
+    <!-- PC 조작 안내 -->
+    <div class="pc-ctrl">
+      <div class="ctrl-card">
+        <h3>⌨ 기본 조작</h3>
+        <div class="k-row"><span class="key">1~9</span><span class="k-desc">메뉴 선택</span></div>
+        <div class="k-row"><span class="key">0</span><span class="k-desc">취소 / 뒤로</span></div>
+        <div class="k-row"><span class="key">Enter</span><span class="k-desc">확인</span></div>
+        <div class="k-row"><span class="key">ESC</span><span class="k-desc">취소 / 메뉴</span></div>
+        <div class="k-row"><span class="key">↑↓</span><span class="k-desc">커서 이동</span></div>
+      </div>
+      <div class="ctrl-card">
+        <h3>💾 세이브</h3>
+        <div class="k-row"><span class="key">저장</span><span class="k-desc">브라우저 DB 저장</span></div>
+        <div class="k-row"><span class="key">⬇</span><span class="k-desc">PC 파일 다운로드</span></div>
+        <div class="k-row"><span class="key">⬆</span><span class="k-desc">PC 파일 불러오기</span></div>
+        <div class="k-row"><span class="key">🗑</span><span class="k-desc">DB 세이브 삭제</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 에디터 -->
+  <div class="editor-col">
+    <div class="tabs">
+      <div class="tab active" data-tab="gold">💰 골드</div>
+      <div class="tab" data-tab="scan">🔍 스캔</div>
+      <div class="tab" data-tab="log">📋 로그</div>
+    </div>
+
+    <!-- 골드 탭 -->
+    <div class="tab-panel active card" id="panel-gold">
+      <div class="card-hd">
+        <span class="card-ttl">💰 골드 편집</span>
+        <span class="badge b-red" id="gold-status">게임 시작 필요</span>
+      </div>
+      <div class="card-body">
+        <div class="gold-big">
+          <div class="lbl">현재 골드 (메모리)</div>
+          <div class="val" id="gold-display">---</div>
+        </div>
+        <div style="font-size:9px;color:var(--muted);margin-bottom:12px;line-height:1.7;background:var(--surface2);padding:8px;border-radius:3px;">
+          📌 게임에서 현재 골드 확인 → 입력 → <b style="color:var(--accent)">스캔+MAX 적용</b>
+        </div>
+        <div class="lbl" style="margin-bottom:6px;">현재 골드 (게임 화면 확인)</div>
+        <div id="gold-cur-in" style="width:100%;box-sizing:border-box;background:var(--bg);color:var(--yellow);border:2px solid var(--accent);border-radius:6px;padding:10px;font-size:22px;font-weight:bold;text-align:center;margin-bottom:8px;min-height:48px;letter-spacing:2px;">0</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:10px;">
+          <button class="btn btn-ghost" style="padding:11px;font-size:16px;" onclick="goldPad('7')">7</button>
+          <button class="btn btn-ghost" style="padding:11px;font-size:16px;" onclick="goldPad('8')">8</button>
+          <button class="btn btn-ghost" style="padding:11px;font-size:16px;" onclick="goldPad('9')">9</button>
+          <button class="btn btn-ghost" style="padding:11px;font-size:16px;" onclick="goldPad('4')">4</button>
+          <button class="btn btn-ghost" style="padding:11px;font-size:16px;" onclick="goldPad('5')">5</button>
+          <button class="btn btn-ghost" style="padding:11px;font-size:16px;" onclick="goldPad('6')">6</button>
+          <button class="btn btn-ghost" style="padding:11px;font-size:16px;" onclick="goldPad('1')">1</button>
+          <button class="btn btn-ghost" style="padding:11px;font-size:16px;" onclick="goldPad('2')">2</button>
+          <button class="btn btn-ghost" style="padding:11px;font-size:16px;" onclick="goldPad('3')">3</button>
+          <button class="btn btn-ghost" style="padding:11px;font-size:16px;color:var(--red);" onclick="goldPad('C')">C</button>
+          <button class="btn btn-ghost" style="padding:11px;font-size:16px;" onclick="goldPad('0')">0</button>
+          <button class="btn btn-ghost" style="padding:11px;font-size:16px;color:var(--muted);" onclick="goldPad('⌫')">⌫</button>
+        </div>
+        <button class="btn btn-primary" style="width:100%;padding:11px;font-size:11px;background:var(--accent);border-color:var(--accent);color:#000;" onclick="goldScan()">🔍 스캔 + MAX 적용</button>
+        <div style="font-size:9px;color:var(--muted);margin-top:8px;text-align:center;">✦ 상점 재진입 시 화면에 반영됩니다</div>
+      </div>
+    </div>
+
+    <!-- 스캔 탭 -->
+    <div class="tab-panel card" id="panel-scan">
+      <div class="card-hd">
+        <span class="card-ttl">🔍 메모리 스캔</span>
+        <span class="badge b-blue" id="scan-status">게임 시작 필요</span>
+      </div>
+      <div class="card-body" style="padding:10px;">
+        <div style="font-size:9px;line-height:1.8;background:var(--surface2);padding:8px;border-radius:3px;margin-bottom:10px;">
+          <b style="color:var(--accent);">📌 사용법</b><br>
+          게임에서 값 확인 → 입력 → <b>🔍 스캔</b><br>
+          값 변경 후 → <b>🔄 재스캔</b>으로 범위 좁히기<br>
+          <span style="color:var(--muted);">주소 클릭 → 값 직접 수정</span>
+        </div>
+        <div class="scan-row">
+          <input class="scan-in" id="scan-val" type="number" placeholder="찾을 값" min="0" />
+          <select class="scan-sel" id="scan-bits">
+            <option value="32">32bit</option>
+            <option value="16">16bit</option>
+            <option value="8">8bit</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:10px;">
+          <button class="btn" style="flex:1;padding:9px;background:var(--accent);border-color:var(--accent);color:#000;" onclick="doScan(false)">🔍 스캔</button>
+          <button class="btn btn-ghost" style="flex:1;padding:9px;" onclick="doScan(true)">🔄 재스캔</button>
+          <button class="btn btn-ghost" style="padding:9px;" onclick="scanResults=[];renderScan()">✕</button>
+        </div>
+        <div style="font-size:9px;color:var(--muted);margin-bottom:6px;">결과: <span id="scan-count">0</span>개</div>
+        <div class="scan-results" id="scan-list"><div class="scan-empty">스캔 결과 없음</div></div>
+      </div>
+    </div>
+
+    <!-- 로그 탭 -->
+    <div class="tab-panel card" id="panel-log">
+      <div class="card-hd">
+        <span class="card-ttl">📋 로그</span>
+        <button class="btn btn-ghost" style="font-size:6px;padding:4px 8px;" onclick="document.getElementById('log-box').innerHTML=''">지우기</button>
+      </div>
+      <div class="card-body" style="padding:8px;">
+        <div class="log-area" id="log-box"></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+// ─── 설정 (확인 필요 항목) ───────────────────────────────
+// ⚠ TODO: 실제 게임 실행 파일명으로 교체
+var GAME_EXE  = 'KOEI.COM';
+// ⚠ TODO: 실제 세이브 파일명으로 교체 (없으면 null)
+var SAV       = null;          // TODO: 확인 필요 (예: 'SAM3.SAV')
+var GOLD_MAX  = 9999999;       // TODO: 게임 최대 골드 확인 필요
+var SCAN_START = 0x1000000;
+var SCAN_END   = 0x2200000;
+var DB_NAME   = 'sam3-saves';
+
+// ⚠ TODO: 실제 게임 파일 목록으로 교체
+var FILES = [
+  'ALL_FONT.16P','DISK01','DISK02','DISK03','DISK04',
+  'END.EXE','ENDMSG.DAT','ENDSTIL.DAT','FMDRV.COM',
+  'FONT.DAT','GRPDATA.DAT','HEXDATA.DAT','HEXGRP.DAT',
+  'HEXIKKI.DAT','HEXMSG.DAT','HEXWAKU.DAT','INSTALL.BAT',
+  'KAODATA.DAT','KOEI.COM','KOEI.DAT','MAIN.EXE','MAPDATA.DAT'
+];
+// ────────────────────────────────────────────────────────
+
+var fs0 = null, gameStarted = false;
+var goldAddrs = [], scanResults = [];
+
+// ─── 유틸 ───
+function heap(){ return fs0 && fs0.em ? fs0.em.HEAPU8 : null; }
+function mRead(a,b){ var h=heap(); if(!h||a<0||a+4>h.length) return 0; b=b||32; if(b===8) return h[a]; if(b===16) return h[a]|(h[a+1]<<8); return h[a]|(h[a+1]<<8)|(h[a+2]<<16)|(h[a+3]<<24); }
+function mWrite(a,v,b){ var h=heap(); if(!h||a<0||a+4>h.length) return false; b=b||32; v=v>>>0; if(b>=8) h[a]=v&0xFF; if(b>=16) h[a+1]=(v>>8)&0xFF; if(b>=32){h[a+2]=(v>>16)&0xFF;h[a+3]=(v>>24)&0xFF;} return true; }
+function toast(msg,type){ var t=document.getElementById('toast'); t.textContent=msg; t.className='show '+(type==='err'?'err':type==='nfo'?'nfo':'ok'); clearTimeout(t._t); t._t=setTimeout(function(){t.className='';},2200); }
+function log(msg,type){ var b=document.getElementById('log-box'); var d=document.createElement('div'); d.className='ll '+(type||'info'); d.textContent=new Date().toLocaleTimeString()+' '+msg; b.appendChild(d); b.scrollTop=b.scrollHeight; }
+function updateStatus(){
+  var gs=document.getElementById('gs');
+  var s=document.getElementById('scan-status');
+  if(!gameStarted){ gs.textContent='게임 꺼짐'; gs.className='game-status status-off'; return; }
+  var h=heap();
+  if(!h){ gs.textContent='로딩 중'; gs.className='game-status status-load'; }
+  else { gs.textContent='게임 실행 중'; gs.className='game-status status-on'; if(s) s.textContent='스캔 가능'; }
+  if(s) s.className='badge '+(h?'b-green':'b-blue');
+}
+
+// ─── 탭 전환 ───
+document.querySelectorAll('.tab').forEach(function(t){
+  t.addEventListener('click',function(){
+    var target=t.getAttribute('data-tab');
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});
+    document.querySelectorAll('.tab-panel').forEach(function(x){x.classList.remove('active');});
+    t.classList.add('active');
+    document.getElementById('panel-'+target).classList.add('active');
+  });
+});
+
+// ─── 골드 패드 ───
+function goldPad(k){
+  var el=document.getElementById('gold-cur-in');
+  var v=el.textContent.replace(/,/g,'');
+  if(k==='C'){el.textContent='0';return;}
+  if(k==='⌫'){el.textContent=v.length>1?v.slice(0,-1):'0';return;}
+  var n=v==='0'?k:v+k;
+  if(parseInt(n)>GOLD_MAX) n=String(GOLD_MAX);
+  el.textContent=n;
+}
+
+// ─── 골드 스캔+MAX ───
+function goldScan(){
+  var h=heap();
+  if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
+  var target=parseInt(document.getElementById('gold-cur-in').textContent.replace(/,/g,''));
+  if(isNaN(target)||target<0){toast('⚠ 골드 값을 입력하세요','err');return;}
+  goldAddrs=[];
+  // 32bit 우선 스캔
+  for(var a=SCAN_START;a<SCAN_END-3;a+=4){
+    var v=h[a]|(h[a+1]<<8)|(h[a+2]<<16)|(h[a+3]<<24);
+    if(v===target) goldAddrs.push({a:a,b:32});
+  }
+  // 결과 없으면 16bit
+  if(goldAddrs.length===0){
+    for(var a=SCAN_START;a<SCAN_END-1;a+=2){
+      var v=h[a]|(h[a+1]<<8);
+      if(v===target) goldAddrs.push({a:a,b:16});
+    }
+  }
+  if(goldAddrs.length===0){toast('⚠ 주소 없음 - 값을 다시 확인하세요','err');return;}
+  goldAddrs.forEach(function(x){ mWrite(x.a, GOLD_MAX, x.b); });
+  toast('💰 골드 MAX! ('+goldAddrs.length+'개 주소)','ok');
+  log('골드 MAX 적용: '+goldAddrs.length+'개 주소','ok');
+  updateGoldDisp();
+}
+
+function updateGoldDisp(){
+  if(goldAddrs.length>0){
+    var v=mRead(goldAddrs[0].a, goldAddrs[0].b);
+    document.getElementById('gold-display').textContent=v.toLocaleString();
+    document.getElementById('gold-status').textContent='골드 감지됨';
+    document.getElementById('gold-status').className='badge b-green';
+  }
+}
+
+// ─── 범용 메모리 스캔 ───
+function doScan(rescan){
+  var h=heap();
+  if(!h){toast('⚠ 게임을 먼저 시작하세요','err');return;}
+  var val=parseInt(document.getElementById('scan-val').value);
+  var bits=parseInt(document.getElementById('scan-bits').value);
+  if(isNaN(val)){toast('⚠ 값을 입력하세요','err');return;}
+  var newRes=[];
+  var step=bits===32?4:bits===16?2:1;
+  if(rescan && scanResults.length>0){
+    scanResults.forEach(function(r){
+      var cur=mRead(r.addr,bits);
+      if(cur===val) newRes.push({addr:r.addr,val:cur});
+    });
+  } else {
+    for(var a=SCAN_START;a<SCAN_END-(step-1);a+=step){
+      var v=mRead(a,bits);
+      if(v===val) newRes.push({addr:a,val:v});
+      if(newRes.length>=500) break;
+    }
+  }
+  scanResults=newRes;
+  renderScan();
+  toast((rescan?'🔄 재스캔':'🔍 스캔')+' 완료: '+newRes.length+'개','ok');
+}
+
+function renderScan(){
+  var list=document.getElementById('scan-list');
+  document.getElementById('scan-count').textContent=scanResults.length;
+  if(scanResults.length===0){list.innerHTML='<div class="scan-empty">결과 없음</div>';return;}
+  list.innerHTML='';
+  scanResults.slice(0,100).forEach(function(r){
+    var bits=parseInt(document.getElementById('scan-bits').value);
+    var d=document.createElement('div');
+    d.className='scan-item';
+    d.innerHTML='<span class="scan-addr">0x'+r.addr.toString(16).toUpperCase()+'</span><span class="scan-v">'+mRead(r.addr,bits)+'</span>';
+    d.addEventListener('click',function(){
+      var nv=prompt('새 값 입력 (현재: '+mRead(r.addr,bits)+')',mRead(r.addr,bits));
+      if(nv===null) return;
+      var v=parseInt(nv);
+      if(isNaN(v)) return;
+      mWrite(r.addr,v,bits);
+      toast('✅ 0x'+r.addr.toString(16).toUpperCase()+' → '+v,'ok');
+      renderScan();
+    });
+    list.appendChild(d);
+  });
+  if(scanResults.length>100){
+    var m=document.createElement('div');
+    m.className='scan-empty';
+    m.textContent='... 외 '+(scanResults.length-100)+'개 (값을 좁혀주세요)';
+    list.appendChild(m);
+  }
+}
+
+// ─── IndexedDB ───
+function openDB(){ return new Promise(function(r,j){ var q=indexedDB.open(DB_NAME,1); q.onupgradeneeded=function(e){e.target.result.createObjectStore('saves');}; q.onsuccess=function(e){r(e.target.result);}; q.onerror=j; }); }
+function dbGet(k){ return openDB().then(function(db){ return new Promise(function(r){ var q=db.transaction('saves','readonly').objectStore('saves').get(k); q.onsuccess=function(e){r(e.target.result);}; q.onerror=function(){r(null);}; }); }); }
+function dbSet(k,v){ return openDB().then(function(db){ return new Promise(function(r){ var tx=db.transaction('saves','readwrite'); tx.objectStore('saves').put(v,k); tx.oncomplete=r; }); }); }
+
+// ─── 게임 시작 ───
+function startGame(){
+  if(gameStarted) return;
+  gameStarted=true;
+  document.getElementById('splash').classList.add('hidden');
+  document.getElementById('loading').classList.add('show');
+  updateStatus();
+  var prog=document.getElementById('prog'), lbl=document.getElementById('prog-label'), loaded=0, total=FILES.length;
+  Dos(document.getElementById('canvas'),{wdosboxUrl:"https://js-dos.com/6.22/current/wdosbox.js"}).ready(function(f,main){
+    fs0=f; updateStatus(); log('DOSBox 준비 완료','ok');
+    var savPromise = SAV ? dbGet(SAV) : Promise.resolve(null);
+    savPromise.then(function(sv){
+      var promises=FILES.map(function(fn){
+        return fetch('./'+fn).then(function(r){return r.arrayBuffer();}).then(function(buf){
+          if(SAV && fn===SAV && sv && sv.length>0) f.createFile(fn,sv);
+          else f.createFile(fn, new Uint8Array(buf));
+          loaded++; prog.style.width=Math.round(loaded/total*100)+'%'; lbl.textContent=loaded+' / '+total;
+        }).catch(function(){ loaded++; log('파일 로드 실패: '+fn,'err'); });
+      });
+      Promise.all(promises).then(function(){
+        prog.style.width='100%';
+        document.getElementById('loading').classList.remove('show');
+        log('게임 파일 로드 완료 ('+total+'개)','ok');
+        updateStatus();
+        main(["-c", GAME_EXE]);
+        setInterval(function(){ if(gameStarted&&heap()) updateGoldDisp(); }, 2000);
+      });
+    });
+  });
+}
+
+// ─── 저장/다운로드/불러오기/삭제 ───
+function doSave(){
+  if(!SAV){toast('⚠ 세이브 파일 미설정','err');return;}
+  if(!fs0){toast('⚠ 게임 실행 후 저장하세요','err');return;}
+  try{
+    var d=fs0.fs.readFile('/'+SAV);
+    if(d&&d.length>0){
+      dbSet(SAV,d).then(function(){
+        toast('💾 저장 완료!','ok'); log('세이브 저장 ('+d.length+' bytes)','ok');
+        document.getElementById('save-notice').textContent='💾 저장된 세이브 있음';
+      });
+    } else { toast('⚠ 게임에서 먼저 저장하세요','err'); }
+  } catch(e){ toast('⚠ 저장 실패','err'); log('저장 실패: '+e.message,'err'); }
+}
+
+function doDl(){
+  if(!SAV){toast('⚠ 세이브 파일 미설정','err');return;}
+  var d=null;
+  if(fs0){ try{d=fs0.fs.readFile('/'+SAV);}catch(e){} }
+  if(d&&d.length>0){dlBlob(d);return;}
+  dbGet(SAV).then(function(s){ if(s&&s.length>0) dlBlob(s); else toast('⚠ 먼저 💾 저장을 누르세요','err'); });
+}
+
+function dlBlob(d){
+  var b=new Blob([d],{type:'application/octet-stream'}), a=document.createElement('a');
+  a.href=URL.createObjectURL(b); a.download=SAV||'save.dat';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href);
+  toast('⬇ '+( SAV||'save.dat')+' 다운로드!','ok');
+}
+
+function doUpload(file){
+  var r=new FileReader();
+  r.onload=function(e){
+    var d=new Uint8Array(e.target.result);
+    var key=SAV||file.name;
+    dbSet(key,d).then(function(){
+      if(fs0){ try{fs0.fs.writeFile('/'+key,d);}catch(err){} }
+      toast('⬆ 불러오기 완료!','ok'); log('세이브 불러오기 ('+d.length+' bytes)','ok');
+      document.getElementById('save-notice').textContent='💾 저장된 세이브 있음';
+    });
+  };
+  r.readAsArrayBuffer(file);
+}
+
+function doDelete(){
+  if(!SAV){toast('⚠ 세이브 파일 미설정','err');return;}
+  if(!confirm('IndexedDB 세이브 데이터를 삭제할까요?\n(PC에 다운로드된 파일은 유지됩니다)')) return;
+  openDB().then(function(db){
+    var tx=db.transaction('saves','readwrite');
+    tx.objectStore('saves').delete(SAV);
+    tx.oncomplete=function(){
+      toast('🗑 세이브 삭제 완료','ok'); log('IndexedDB 세이브 삭제','ok');
+      document.getElementById('save-notice').textContent='';
+    };
+  });
+}
+
+function fullscreen(){ var w=document.querySelector('.player-wrapper'); if(!document.fullscreenElement){if(w.requestFullscreen)w.requestFullscreen();}else{if(document.exitFullscreen)document.exitFullscreen();} }
+
+// ─── 버튼 이벤트 ───
+document.getElementById('btn-start').addEventListener('click',startGame);
+document.getElementById('btn-play').addEventListener('click',startGame);
+document.getElementById('btn-save').addEventListener('click',doSave);
+document.getElementById('btn-del').addEventListener('click',doDelete);
+document.getElementById('btn-dl').addEventListener('click',doDl);
+document.getElementById('btn-ul-t').addEventListener('click',function(){ document.getElementById('btn-ul').click(); });
+document.getElementById('btn-ul').addEventListener('change',function(e){ if(e.target.files[0]) doUpload(e.target.files[0]); e.target.value=''; });
+document.getElementById('btn-full').addEventListener('click',fullscreen);
+document.addEventListener('keydown',function(e){ if(e.code==='Space'&&!gameStarted){e.preventDefault();startGame();} });
+
+// ─── 터치 버튼 (숫자 + Enter/ESC/방향키) ───
+function sendKey(k,t){
+  var codeMap={
+    '0':48,'1':49,'2':50,'3':51,'4':52,'5':53,'6':54,'7':55,'8':56,'9':57,
+    'Enter':13,'Escape':27,'Backspace':8,'ArrowUp':38,'ArrowDown':40,'ArrowLeft':37,'ArrowRight':39
+  };
+  var ev=new KeyboardEvent(t,{key:k,code:'Key'+k,keyCode:codeMap[k]||0,bubbles:true,cancelable:true});
+  var cv=document.getElementById('canvas');
+  cv.dispatchEvent(ev); document.dispatchEvent(ev);
+}
+document.querySelectorAll('.touch-btn[data-key]').forEach(function(b){
+  var k=b.getAttribute('data-key');
+  b.addEventListener('touchstart',function(e){e.preventDefault();b.classList.add('pressed');sendKey(k,'keydown');},{passive:false});
+  b.addEventListener('touchend',function(e){e.preventDefault();b.classList.remove('pressed');sendKey(k,'keyup');},{passive:false});
+  b.addEventListener('mousedown',function(){b.classList.add('pressed');sendKey(k,'keydown');});
+  b.addEventListener('mouseup',function(){b.classList.remove('pressed');sendKey(k,'keyup');});
+});
+
+// ─── 초기화 ───
+if(SAV){
+  dbGet(SAV).then(function(d){ document.getElementById('save-notice').textContent=d?'💾 저장된 세이브 있음':''; });
+}
+</script>
+</body>
+</html>
