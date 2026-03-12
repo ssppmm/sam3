@@ -24,7 +24,7 @@
     .status-off  { background: var(--red);   color: #fff; }
     .status-load { background: var(--blue);  color: #000; }
     .status-on   { background: var(--green); color: #000; }
-    main { max-width: 1300px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: 1fr 380px; gap: 16px; }
+    main { max-width: 960px; margin: 0 auto; padding: 16px; }
     @media (max-width: 960px) { main { grid-template-columns: 1fr; } }
     .player-wrapper { position: relative; background: #000; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
     .player-wrapper:fullscreen,
@@ -139,7 +139,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">🗡 Sam3 <span style="font-size:10px;color:var(--yellow);font-weight:bold;vertical-align:middle;">v8</span></div>
+  <div class="logo">🗡 Sam3 <span style="font-size:10px;color:var(--yellow);font-weight:bold;vertical-align:middle;">v9</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -219,15 +219,15 @@
   </div>
 
   <!-- 에디터 -->
-  <div class="editor-col">
-    <div class="tabs">
+  <div class="editor-col" style="display:none;">
+    <div class="tabs" style="display:none;">
       <div class="tab active" data-tab="gold">💰 골드</div>
       <div class="tab" data-tab="scan">🔍 스캔</div>
       <div class="tab" data-tab="log">📋 로그</div>
     </div>
 
     <!-- 골드 탭 -->
-    <div class="tab-panel active card" id="panel-gold">
+    <div class="tab-panel active card" id="panel-gold" style="display:none;">
       <div class="card-hd">
         <span class="card-ttl">💰 골드 편집</span>
         <span class="badge b-red" id="gold-status">게임 시작 필요</span>
@@ -262,7 +262,7 @@
     </div>
 
     <!-- 스캔 탭 -->
-    <div class="tab-panel card" id="panel-scan">
+    <div class="tab-panel card" id="panel-scan" style="display:none;">
       <div class="card-hd">
         <span class="card-ttl">🔍 메모리 스캔</span>
         <span class="badge b-blue" id="scan-status">게임 시작 필요</span>
@@ -293,7 +293,7 @@
     </div>
 
     <!-- 로그 탭 -->
-    <div class="tab-panel card" id="panel-log">
+    <div class="tab-panel card" id="panel-log"  style="display:none;">
       <div class="card-hd">
         <span class="card-ttl">📋 로그</span>
         <button class="btn btn-ghost" style="font-size:6px;padding:4px 8px;" onclick="document.getElementById('log-box').innerHTML=''">지우기</button>
