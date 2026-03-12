@@ -75,7 +75,7 @@
     }
     /* 숫자 패드 */
     .numpad { display: grid; grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(4, 56px); gap: 3px; }
-    .act-btns { display: flex; flex-direction: column; gap: 8px; }
+    .act-btns { display: flex; flex-direction: row; flex-wrap: wrap; gap: 6px; justify-content: center; }
     .touch-btn { width: 56px; height: 56px; background: #1e1e2e; border: 2px solid var(--border2); border-radius: 8px; color: var(--text); font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; -webkit-user-select: none; transition: all .1s; touch-action: manipulation; }
     .touch-btn:active, .touch-btn.pressed { background: var(--accent); border-color: var(--accent); color: #000; transform: scale(0.9); }
     .touch-btn.act { width: 72px; height: 56px; font-family: var(--font-pixel); font-size: 7px; background: #1a1a2e; border-color: var(--accent); color: var(--accent); }
@@ -139,7 +139,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">🗡 Sam3 <span style="font-size:10px;color:var(--yellow);font-weight:bold;vertical-align:middle;">v9</span></div>
+  <div class="logo">🗡 Sam3 <span style="font-size:10px;color:var(--yellow);font-weight:bold;vertical-align:middle;">v11</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -181,8 +181,6 @@
           <button class="touch-btn act" data-key="Escape">ESC</button>
           <button class="touch-btn act" data-key="y">Y</button>
           <button class="touch-btn act" data-key="n">N</button>
-          <button class="touch-btn act" data-key="ArrowUp">▲</button>
-          <button class="touch-btn act" data-key="ArrowDown">▼</button>
         </div>
       </div>
     </div>
