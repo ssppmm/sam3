@@ -74,7 +74,7 @@
       border: none; border-radius: 0; margin: 0; z-index: 9999;
     }
     /* 숫자 패드 */
-    .numpad { display: grid; grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(4, 56px); gap: 3px; }
+    .numpad { display: flex; flex-wrap: wrap; gap: 6px; }
     .act-btns { display: flex; flex-direction: row; flex-wrap: wrap; gap: 6px; justify-content: center; }
     .touch-btn { width: 56px; height: 56px; background: #1e1e2e; border: 2px solid var(--border2); border-radius: 8px; color: var(--text); font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; -webkit-user-select: none; transition: all .1s; touch-action: manipulation; }
     .touch-btn:active, .touch-btn.pressed { background: var(--accent); border-color: var(--accent); color: #000; transform: scale(0.9); }
@@ -139,7 +139,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">🗡 Sam3 <span style="font-size:10px;color:var(--yellow);font-weight:bold;vertical-align:middle;">v11</span></div>
+  <div class="logo">🗡 Sam3 <span style="font-size:10px;color:var(--yellow);font-weight:bold;vertical-align:middle;">v13</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -164,16 +164,16 @@
       <!-- 모바일 터치 컨트롤 (숫자패드 + Enter/ESC) -->
       <div class="touch-controls">
         <div class="numpad">
-          <button class="touch-btn" data-key="7">7</button>
-          <button class="touch-btn" data-key="8">8</button>
-          <button class="touch-btn" data-key="9">9</button>
-          <button class="touch-btn" data-key="4">4</button>
-          <button class="touch-btn" data-key="5">5</button>
-          <button class="touch-btn" data-key="6">6</button>
           <button class="touch-btn" data-key="1">1</button>
           <button class="touch-btn" data-key="2">2</button>
           <button class="touch-btn" data-key="3">3</button>
-          <button class="touch-btn" style="grid-column:span 2;" data-key="0">0</button>
+          <button class="touch-btn" data-key="4">4</button>
+          <button class="touch-btn" data-key="5">5</button>
+          <button class="touch-btn" data-key="6">6</button>
+          <button class="touch-btn" data-key="7">7</button>
+          <button class="touch-btn" data-key="8">8</button>
+          <button class="touch-btn" data-key="9">9</button>
+          <button class="touch-btn" data-key="0">0</button>
           <button class="touch-btn" data-key="Backspace">⌫</button>
         </div>
         <div class="act-btns">
