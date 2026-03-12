@@ -30,7 +30,7 @@
     .player-wrapper:fullscreen,
     .player-wrapper:-webkit-full-screen,
     .player-wrapper:-moz-full-screen { overflow: visible; border-radius: 0; border: none; }
-    #canvas { width: 100%; aspect-ratio: 4/3; max-height: 52vh; display: block; }
+    #canvas { width: 100%; aspect-ratio: 4/3; max-height: 52vh; display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
     #splash { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; z-index: 10; transition: opacity .4s; }
     #splash.hidden { opacity: 0; pointer-events: none; }
     .splash-icon { font-size: 64px; margin-bottom: 12px; }
@@ -139,7 +139,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">🗡 Sam3 <span style="font-size:10px;color:var(--yellow);font-weight:bold;vertical-align:middle;">v15</span></div>
+  <div class="logo">🗡 Sam3 <span style="font-size:10px;color:var(--yellow);font-weight:bold;vertical-align:middle;">v16</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
