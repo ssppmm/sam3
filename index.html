@@ -138,7 +138,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">🗡 Sam3 <span style="font-size:10px;color:var(--yellow);font-weight:bold;vertical-align:middle;">v5</span></div>
+  <div class="logo">🗡 Sam3 <span style="font-size:10px;color:var(--yellow);font-weight:bold;vertical-align:middle;">v6</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -297,7 +297,7 @@ function startGame(){
   updateStatus();
   var prog=document.getElementById('prog'), lbl=document.getElementById('prog-label'), loaded=0, total=FILES.length;
   Dos(document.getElementById('canvas'),{wdosboxUrl:"https://js-dos.com/6.22/current/wdosbox.js"}).ready(function(f,main){
-    fs0=f; updateStatus(); log('DOSBox 준비 완료','ok');
+    fs0=f; updateStatus(); try{log('DOSBox 준비 완료','ok');}catch(x){}
     var savPromise = SAV ? dbGet(SAV) : Promise.resolve(null);
     savPromise.then(function(sv){
       var promises=FILES.map(function(fn){
@@ -305,12 +305,12 @@ function startGame(){
           if(SAV && fn===SAV && sv && sv.length>0) f.createFile(fn,sv);
           else f.createFile(fn, new Uint8Array(buf));
           loaded++; prog.style.width=Math.round(loaded/total*100)+'%'; lbl.textContent=loaded+' / '+total;
-        }).catch(function(){ loaded++; log('파일 로드 실패: '+fn,'err'); });
+        }).catch(function(e){ loaded++; prog.style.width=Math.round(loaded/total*100)+'%'; lbl.textContent=loaded+' / '+total; try{log('파일 로드 실패: '+fn,'err');}catch(x){} });
       });
       Promise.all(promises).then(function(){
         prog.style.width='100%';
         document.getElementById('loading').classList.remove('show');
-        log('게임 파일 로드 완료 ('+total+'개)','ok');
+        try{log('게임 파일 로드 완료 ('+total+'개)','ok');}catch(x){}
         updateStatus();
         main(["-c", GAME_EXE]);
       });
