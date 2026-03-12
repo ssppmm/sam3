@@ -138,7 +138,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">🗡 Sam3 <span style="font-size:10px;color:var(--yellow);font-weight:bold;vertical-align:middle;">v6</span></div>
+  <div class="logo">🗡 Sam3 <span style="font-size:10px;color:var(--yellow);font-weight:bold;vertical-align:middle;">v7</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -300,12 +300,21 @@ function startGame(){
     fs0=f; updateStatus(); try{log('DOSBox 준비 완료','ok');}catch(x){}
     var savPromise = SAV ? dbGet(SAV) : Promise.resolve(null);
     savPromise.then(function(sv){
+      function fetchWithTimeout(url, ms){
+        return new Promise(function(resolve, reject){
+          var timer = setTimeout(function(){ reject(new Error('timeout: '+url)); }, ms);
+          fetch(url).then(function(r){
+            clearTimeout(timer); resolve(r);
+          }).catch(function(e){ clearTimeout(timer); reject(e); });
+        });
+      }
       var promises=FILES.map(function(fn){
-        return fetch('./'+fn).then(function(r){return r.arrayBuffer();}).then(function(buf){
+        return fetchWithTimeout('./'+fn, 10000).then(function(r){return r.arrayBuffer();}).then(function(buf){
           if(SAV && fn===SAV && sv && sv.length>0) f.createFile(fn,sv);
           else f.createFile(fn, new Uint8Array(buf));
           loaded++; prog.style.width=Math.round(loaded/total*100)+'%'; lbl.textContent=loaded+' / '+total;
-        }).catch(function(e){ loaded++; prog.style.width=Math.round(loaded/total*100)+'%'; lbl.textContent=loaded+' / '+total; try{log('파일 로드 실패: '+fn,'err');}catch(x){} });
+          try{log('✓ '+fn,'ok');}catch(x){}
+        }).catch(function(e){ loaded++; prog.style.width=Math.round(loaded/total*100)+'%'; lbl.textContent=loaded+' / '+total; try{log('✗ 실패: '+fn+' ('+e.message+')','err');}catch(x){} });
       });
       Promise.all(promises).then(function(){
         prog.style.width='100%';
