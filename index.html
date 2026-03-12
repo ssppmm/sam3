@@ -139,7 +139,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">🗡 Sam3 <span style="font-size:10px;color:var(--yellow);font-weight:bold;vertical-align:middle;">v1</span></div>
+  <div class="logo">🗡 Sam3 <span style="font-size:10px;color:var(--yellow);font-weight:bold;vertical-align:middle;">v2</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -309,9 +309,9 @@
 <script>
 // ─── 설정 (확인 필요 항목) ───────────────────────────────
 // ⚠ TODO: 실제 게임 실행 파일명으로 교체
-var GAME_EXE  = 'KOEI.COM';
+var GAME_EXE  = 'SAM3PLAY.BAT';
 // ⚠ TODO: 실제 세이브 파일명으로 교체 (없으면 null)
-var SAV       = null;          // TODO: 확인 필요 (예: 'SAM3.SAV')
+var SAV       = 'SAVEDATA.DAT';
 var GOLD_MAX  = 9999999;       // TODO: 게임 최대 골드 확인 필요
 var SCAN_START = 0x1000000;
 var SCAN_END   = 0x2200000;
@@ -323,7 +323,14 @@ var FILES = [
   'END.EXE','ENDMSG.DAT','ENDSTIL.DAT','FMDRV.COM',
   'FONT.DAT','GRPDATA.DAT','HEXDATA.DAT','HEXGRP.DAT',
   'HEXIKKI.DAT','HEXMSG.DAT','HEXWAKU.DAT','INSTALL.BAT',
-  'KAODATA.DAT','KOEI.COM','KOEI.DAT','MAIN.EXE','MAPDATA.DAT'
+  'KAODATA.DAT','KOEI.COM','KOEI.DAT','MAIN.EXE','MAPDATA.DAT',
+  'MONTAGE.DAT','NBDATA.DAT','NPKDATA.DAT',
+  'OPEN.DAT','OPEN.EXE','OPEN.NPK','OPENGRP.DAT',
+  'PACKDATA.DAT','SAM3PLAY.BAT','SANGOKU3.SAV','SAVEDATA.DAT',
+  'SNDATA1.CIM','SNDATA1B.CIM','SNDATA2.CIM','SNDATA2B.CIM',
+  'SNDATA3.CIM','SNDATA3B.CIM','SNDATA4.CIM','SNDATA4B.CIM',
+  'SNDATA5.CIM','SNDATA5B.CIM','SNDATA6.CIM','SNDATA6B.CIM',
+  'STRFONT.DAT','UCOMMSG.DAT'
 ];
 // ────────────────────────────────────────────────────────
 
