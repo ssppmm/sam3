@@ -62,7 +62,7 @@
     .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
     .touch-controls { display: none; padding: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; margin-top: 8px; }
     @media (pointer: coarse) {
-      .touch-controls { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+      .touch-controls { display: flex; align-items: center; width: 100%; }
       .pc-ctrl { display: none !important; }
     }
     .player-wrapper:fullscreen .touch-controls,
@@ -139,7 +139,7 @@
 </head>
 <body>
 <header>
-  <div class="logo">🗡 Sam3 <span style="font-size:10px;color:var(--yellow);font-weight:bold;vertical-align:middle;">v14</span></div>
+  <div class="logo">🗡 Sam3 <span style="font-size:10px;color:var(--yellow);font-weight:bold;vertical-align:middle;">v15</span></div>
   <span class="game-status status-off" id="gs">게임 꺼짐</span>
 </header>
 
@@ -163,24 +163,26 @@
 
       <!-- 모바일 터치 컨트롤 (숫자패드 + Enter/ESC) -->
       <div class="touch-controls">
-        <div class="numpad">
-          <button class="touch-btn" data-key="1">1</button>
-          <button class="touch-btn" data-key="2">2</button>
-          <button class="touch-btn" data-key="3">3</button>
-          <button class="touch-btn" data-key="4">4</button>
-          <button class="touch-btn" data-key="5">5</button>
-          <button class="touch-btn" data-key="6">6</button>
-          <button class="touch-btn" data-key="7">7</button>
-          <button class="touch-btn" data-key="8">8</button>
-          <button class="touch-btn" data-key="9">9</button>
-          <button class="touch-btn" data-key="0">0</button>
-          <button class="touch-btn act" data-key="y">Y</button>
-          <button class="touch-btn act" data-key="n">N</button>
-        </div>
-        <div class="act-btns">
-          <button class="touch-btn" data-key="Backspace">⌫</button>
-          <button class="touch-btn act" data-key="Enter">ENTER</button>
-          <button class="touch-btn act" data-key="Escape">ESC</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
+          <div style="display:flex;gap:4px;">
+            <button class="touch-btn" data-key="1">1</button>
+            <button class="touch-btn" data-key="2">2</button>
+            <button class="touch-btn" data-key="3">3</button>
+            <button class="touch-btn" data-key="4">4</button>
+            <button class="touch-btn" data-key="5">5</button>
+            <button class="touch-btn" data-key="6">6</button>
+            <button class="touch-btn" data-key="7">7</button>
+            <button class="touch-btn" data-key="8">8</button>
+            <button class="touch-btn" data-key="9">9</button>
+            <button class="touch-btn" data-key="0">0</button>
+            <button class="touch-btn" data-key="Backspace">⌫</button>
+          </div>
+          <div style="display:flex;gap:4px;">
+            <button class="touch-btn act" data-key="y">Y</button>
+            <button class="touch-btn act" data-key="n">N</button>
+            <button class="touch-btn act" data-key="Enter">ENTER</button>
+            <button class="touch-btn act" data-key="Escape">ESC</button>
+          </div>
         </div>
       </div>
     </div>
